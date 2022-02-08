@@ -1,29 +1,86 @@
-import { useEffect, useState } from "react";
-import "./App.css";
-import { getAllCharacters } from "./Api/api";
-import { getOneCharacter } from "./Api/api2";
+import React, { useState, useEffect } from "react";
 
-function App() {
+const RickAndMorty = () => {
   const [characters, setCharacters] = useState([]);
+  const [character, setCharacter] = useState("");
+  const [characterSelected, setCharacterSelected] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    getAllCharacters().then((data) => setCharacters(data));
+    apiFetch();
   }, []);
-  // useEffect(() => {
-  //   getOneCharacter().then((data) => setCharacters(data));
-  // }, []);
+
+  useEffect(() => {
+    showUpCharacter();
+  }, [character]);
+
+  const apiFetch = async () => {
+    setLoading(true);
+    const api = await fetch("https://rickandmortyapi.com/api/character");
+    const res = await api.json();
+    setLoading(false);
+    setCharacters(res.results);
+  };
+
+  const showUpCharacter = async () => {
+    if (characterSelected !== "") {
+      setLoading(true);
+      const api = await fetch(
+        `https://rickandmortyapi.com/api/character/${character}`
+      );
+      const res = await api.json();
+      setLoading(false);
+      setCharacterSelected(res);
+    }
+  };
 
   return (
-    <div className="container">
-      <h1> Rick and Morty App</h1>
-      <select>
-        <option> -- Select a Character --</option>
-        {characters.map((item) => (
-          <option key={item.id}>{item.name}</option>
-        ))}
-      </select>
+    <div className="cardContainer">
+      <h2>Rick and Morty App</h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <select
+          value={character}
+          onChange={(e) => setCharacter(e.target.value)}
+        >
+          <option value="">- Select character -</option>
+          {characters.map((character) => (
+            <option value={character.id} key={character.id}>
+              {character.name}
+            </option>
+          ))}
+        </select>
+      )}
+      <div>
+        {characterSelected?.name ? (
+          <div className="targetContainer">
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              <>
+                <img
+                  src={characterSelected.image}
+                  alt={characterSelected.name}
+                />
+                <div className="targetText">
+                  <h3>{characterSelected.name}</h3>
+                  <p>
+                    species: <b>{characterSelected.species}</b>
+                  </p>
+                  <p>
+                    status: <b>{characterSelected.status}</b>
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <p>Seleccione un personaje</p>
+        )}
+      </div>
     </div>
   );
-}
+};
 
-export default App;
+export default RickAndMorty;
